@@ -1,0 +1,118 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup")
+load("//:defs.bzl", "codeql_platform")
+load(
+    "//misc/bazel:pkg.bzl",
+    "codeql_pack",
+    "codeql_pkg_files",
+    "codeql_pkg_runfiles",
+)
+
+filegroup(
+    name = "schema",
+    srcs = ["schema.py"],
+    visibility = ["//swift:__subpackages__"],
+)
+
+filegroup(
+    name = "schema_includes",
+    srcs = glob(["*.dbscheme"]),
+    visibility = ["//swift:__subpackages__"],
+)
+
+filegroup(
+    name = "codegen_conf",
+    srcs = ["codegen.conf"],
+    visibility = ["//swift:__subpackages__"],
+)
+
+codeql_pkg_files(
+    name = "autobuilder-incompatible-os",
+    exes = ["//swift/tools/diagnostics:autobuilder-incompatible-os"],
+)
+
+codeql_pkg_runfiles(
+    name = "autobuilder",
+    exes = ["//swift/swift-autobuilder"],
+)
+
+pkg_filegroup(
+    name = "tools-arch",
+    srcs = select({
+        "@platforms//os:macos": [
+            ":autobuilder",
+            "//swift/extractor:pkg",
+        ],
+        "@platforms//os:linux": [
+            ":autobuilder-incompatible-os",
+            "//swift/extractor:pkg",
+        ],
+        "@platforms//os:windows": [
+            ":autobuilder-incompatible-os",
+        ],
+    }),
+    prefix = "{CODEQL_PLATFORM}",
+)
+
+pkg_filegroup(
+    name = "tools",
+    srcs = [
+        ":tools-arch",
+        "//swift/tools",
+    ],
+    prefix = "tools",
+)
+
+codeql_pkg_files(
+    name = "root-files",
+    srcs = [
+        "codeql-extractor.yml",
+        "ql/lib/swift.dbscheme.stats",
+        "//swift/extractor/trap:generated_dbscheme",
+    ],
+)
+
+codeql_pack(
+    name = "swift",
+    srcs = [
+        ":root-files",
+        ":tools",
+        "//swift/downgrades",
+    ],
+    zips = select({
+        "@platforms//os:windows": {},
+        "//conditions:default": {
+            "//swift/third_party/resource-dir": "resource-dir/{CODEQL_PLATFORM}",
+        },
+    }),
+)
+
+alias(
+    name = "create-extractor-pack",
+    actual = ":swift-installer",
+)
+
+# TODO: following rules are for internal repo backward compatibility only
+alias(
+    name = "extractor-pack-generic",
+    actual = "swift-generic",
+    visibility = ["//visibility:public"],
+)
+
+pkg_filegroup(
+    name = "resource-dir",
+    srcs = select({
+        "@platforms//os:linux": ["@swift_toolchain_linux//:resource-dir-files"],
+        "@platforms//os:macos": ["@swift_toolchain_macos//:resource-dir-files"],
+        "@platforms//os:windows": [],
+    }),
+    prefix = "resource-dir/" + codeql_platform,
+)
+
+pkg_filegroup(
+    name = "extractor-pack-arch",
+    srcs = [
+        ":resource-dir",
+        ":swift-arch",
+    ],
+    visibility = ["//visibility:public"],
+)

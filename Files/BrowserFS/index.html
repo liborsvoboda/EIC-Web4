@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="./browserfs.min.js"></script>
+</head>
+<body>
+  <script type="text/javascript">
+    // Installs globals onto window:
+    // * Buffer
+    // * require (monkey-patches if already defined)
+    // * process
+    // You can pass in an arbitrary object if you do not wish to pollute
+    // the global namespace.
+    BrowserFS.install(window);
+    // Configures BrowserFS to use the InMemory file system.
+    BrowserFS.configure({
+      fs: "InMemory"
+    }, function(e) {
+      if (e) {
+        console.error(e);
+        return;
+      }
+      
+      console.log("BrowserFS is ready-to-use!");
+
+      var fs = require('fs');
+      fs.writeFile('/test.txt', 'Cool, I can do this in the browser!', function(err) {
+        fs.readFile('/test.txt', function(err, contents) {
+          console.log(contents.toString());
+        });
+      });
+    });
+  </script>
+</body>
+</html>

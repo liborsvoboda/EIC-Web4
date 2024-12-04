@@ -1,0 +1,132 @@
+* {
+  box-sizing: inherit;
+}
+body {
+  box-sizing: border-box;
+  margin: 0;
+  font: 12px system-ui;
+}
+.dialog {
+  z-index: 1;
+  position: fixed;
+  max-width: 50%;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%);
+  background-color: #e8e8e8;
+  padding: 1em;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+}
+.pane {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.pane > div {
+  flex: 1;
+  overflow: hidden;
+}
+.list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1px;
+}
+.list .scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 1px;
+  background-color: #fff;
+}
+.list:not(.active) {
+  background-color: #fff;
+}
+.list.active {
+  background-color: goldenrod;
+}
+.list input {
+  width: 100%;
+  font-family: system-ui;
+}
+.list img,
+.list canvas {
+  margin-right: 2px;
+  vertical-align: sub;
+}
+.list table {
+  -webkit-user-select: none;
+  user-select: none;
+  width: 100%;
+  border-collapse: collapse;
+}
+.list table td {
+  white-space: nowrap;
+  height: 20px;
+  vertical-align: middle;
+}
+.list table td:not(:first-child) {
+  text-align: right;
+}
+.list table td:last-child {
+  font-family: monospace;
+}
+.list tr.focus {
+  background-color: #e8e8e8;
+  box-shadow: 0 0 0 1px #000;
+}
+.list tr.selected {
+  color: red;
+}
+.tabs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.tabs li {
+  display: inline-block;
+  cursor: pointer;
+  padding: 0 3px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+.tabs li:not(.active) {
+  opacity: 0.8;
+}
+.tabs li.active {
+  font-weight: bold;
+  border-color: goldenrod;
+}
+#prompt input {
+  display: block;
+  width: 100%;
+}
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #e8e8e8;
+}
+#panes {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+footer {
+  line-height: 1.5;
+  padding: 0 3px;
+}
+body.modal::after {
+  content: "";
+  display: block;
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+}

@@ -1,0 +1,22 @@
+{
+  "name": "cfo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "less": "^3.8.1",
+    "rollup": "^0.66.6",
+    "rollup-plugin-graph": "^1.2.0",
+    "rollup-plugin-includepaths": "^0.2.3"
+  },
+  "scripts": {
+    "start": "electron .",
+    "rollup": "rollup",
+    "lessc": "lessc",
+    "test": "cd tests; electron ."
+  },
+  "dependencies": {
+    "electron": "^7.1.7",
+    "electron-settings": "^3.2.0",
+    "mime": "^2.3.1"
+  }
+}

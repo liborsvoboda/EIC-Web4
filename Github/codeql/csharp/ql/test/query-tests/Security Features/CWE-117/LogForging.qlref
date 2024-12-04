@@ -1,0 +1,2 @@
+query: Security Features/CWE-117/LogForging.ql
+postprocess: TestUtilities/PrettyPrintModels.ql

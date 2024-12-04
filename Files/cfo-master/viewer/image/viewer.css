@@ -1,0 +1,40 @@
+* {
+  box-sizing: inherit;
+}
+body {
+  box-sizing: border-box;
+  margin: 0;
+  font: 12px system-ui;
+}
+.dialog {
+  z-index: 1;
+  position: fixed;
+  max-width: 50%;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%);
+  background-color: #e8e8e8;
+  padding: 1em;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+}
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+body.loading {
+  cursor: wait;
+}
+main {
+  flex: 1;
+  overflow: hidden;
+}
+footer {
+  line-height: 1.5;
+}
+footer span {
+  margin: 0 1em;
+}
+img {
+  position: relative;
+}

@@ -1,0 +1,1 @@
+import{_ as s,c as n,o as a,M as l}from"./chunks/framework.3042347b.js";const B=JSON.parse('{"title":"xlsx文件预览","description":"","frontmatter":{},"headers":[],"relativePath":"guide/preview-xlsx.md"}'),p={name:"guide/preview-xlsx.md"},o=l("",6),e=[o];function t(c,r,D,F,y,i){return a(),n("div",null,e)}const u=s(p,[["render",t]]);export{B as __pageData,u as default};

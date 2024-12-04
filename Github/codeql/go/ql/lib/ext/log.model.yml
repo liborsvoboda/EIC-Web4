@@ -1,0 +1,8 @@
+extensions:
+  - addsTo:
+      pack: codeql/go-all
+      extensible: summaryModel
+    data:
+      - ["log", "Logger", True, "SetOutput", "", "", "Argument[receiver]", "Argument[0]", "taint", "manual"]
+      - ["log", "Logger", True, "SetPrefix", "", "", "Argument[0]", "Argument[receiver]", "taint", "manual"]
+      - ["log", "Logger", True, "Writer", "", "", "Argument[receiver]", "ReturnValue", "taint", "manual"]
