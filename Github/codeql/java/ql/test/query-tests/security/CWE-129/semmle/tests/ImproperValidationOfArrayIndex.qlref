@@ -1,2 +1,0 @@
-query: Security/CWE/CWE-129/ImproperValidationOfArrayIndex.ql
-postprocess: TestUtilities/PrettyPrintModels.ql

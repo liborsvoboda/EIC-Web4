@@ -1,2 +1,0 @@
-query: Security Features/CWE-099/ResourceInjection.ql
-postprocess: TestUtilities/PrettyPrintModels.ql

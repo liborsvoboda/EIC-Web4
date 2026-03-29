@@ -1,2 +1,0 @@
-query: Security/CWE-078/StoredCommand.ql
-postprocess: TestUtilities/PrettyPrintModels.ql

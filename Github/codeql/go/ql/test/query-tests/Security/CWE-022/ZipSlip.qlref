@@ -1,2 +1,0 @@
-query: Security/CWE-022/ZipSlip.ql
-postprocess: TestUtilities/PrettyPrintModels.ql

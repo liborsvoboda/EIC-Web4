@@ -1,2 +1,0 @@
-query: experimental/Security/CWE/CWE-470/UnsafeReflection.ql
-postprocess: TestUtilities/PrettyPrintModels.ql

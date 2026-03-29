@@ -1,2 +1,0 @@
-query: Security/CWE/CWE-319/HttpsUrls.ql
-postprocess: TestUtilities/PrettyPrintModels.ql

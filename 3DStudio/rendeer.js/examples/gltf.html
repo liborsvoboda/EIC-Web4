@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<title>rendeer.js: gltf example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix-min.js"></script>
+	<script type="text/javascript" src="../external/litegl.js"></script>
+	<script type="text/javascript" src="../external/draco_decoder.js"></script>
+	<script type="text/javascript" src="../src/rendeer.js"></script>
+	<script type="text/javascript" src="../src/rendeer-animation.js"></script>
+	<script type="text/javascript" src="../src/rendeer-gltf.js"></script>
+	<script type="text/javascript">
+
+	var renderer = null;
+	var camera = null;
+	var scene = null;
+	var gltf_node = null;
+	var animation = null;
+	var anim_index = 0;
+	
+	function init()
+	{
+		//create a scene
+		scene = new RD.Scene();
+
+		//create the rendering context
+		renderer = new RD.Renderer({width: window.innerWidth, height:window.innerHeight, version: 2});
+		document.body.appendChild(renderer.canvas); //attach
+
+		//create camera
+		camera = new RD.Camera();
+		camera.perspective( 45, gl.canvas.width / gl.canvas.height, 1, 1000 );
+		camera.lookAt( [10,10,10],[0,0,0],[0,1,0] );
+
+		var floor = new RD.SceneNode();
+		floor.mesh = "planeXZ";
+		floor.scale([50,50,50]);
+		//scene.root.addChild(floor);
+
+		//var url = "data/Fox/glTF/Fox.gltf";
+		//var url = "data/Buggy.glb";
+		//var url = "data/DamagedHelmet.glb";
+		var url = "data/MorphStressTest.glb";
+
+		RD.GLTF.load(url, onSceneReady);
+
+		//global settings
+		var bg_color = vec4.fromValues(0.9,0.9,0.9,1);
+
+		//main render loop
+		var last = now = getTime();
+		requestAnimationFrame(animate);
+		function animate() {
+			requestAnimationFrame( animate );
+
+			camera.near = vec3.distance( camera.position, camera.target ) * 0.1;
+
+			last = now;
+			now = getTime();
+			var dt = (now - last) * 0.001;
+			renderer.clear(bg_color);
+			renderer.render(scene, camera);
+			scene.update(dt);
+
+			if(gltf_node && animation)
+				animation.applyAnimation( gltf_node, scene.time % animation.duration, RD.LINEAR, true );
+		}
+
+		//input
+		renderer.context.captureMouse(true);
+		renderer.context.onmousemove = function(e)
+		{
+			if(e.dragging)
+			{
+				if(e.buttons & 4 )
+				{
+					var front = vec3.sub( vec3.create(), camera.position, camera.target );
+                    var l = vec3.length( front ) * 0.001;
+					camera.moveLocal( [-e.deltax, e.deltay, 0], l );
+				}
+				else
+				{
+					camera.orbit( e.deltax * -0.01, [0,1,0] );
+					camera.orbit( e.deltay * -0.01, [1,0,0], null, true );
+				}
+			}
+		}
+
+		renderer.context.onmousewheel = function(e)
+		{
+			var direction = (e.wheel > 0) ? 1 : -1;
+			var offset = 1 + direction * -0.1;
+			camera.orbitDistanceFactor( offset );
+		}
+
+		renderer.context.captureKeys(true);
+		renderer.context.onkeydown = function(e)
+		{
+			if(e.code === "KeyN")
+			{
+				anim_index++;
+				anim_index = anim_index % gltf_node.animations.length;
+				animation = gltf_node.animations[ anim_index ];
+			}
+		}
+
+		enableDrop();
+	}
+
+	//Allows to DRAG AND DROP files
+	var dropbox = null;
+	function enableDrop()
+	{
+		dropbox = document.body;
+		dropbox.addEventListener("dragenter", onDragEvent, false);
+		function onDragEvent(evt)
+		{
+			for(var i in evt.dataTransfer.types)
+				if(evt.dataTransfer.types[i] == "Files")
+				{
+					if(evt.type != "dragover") console.log("Drag event: " + evt.type);
+					evt.stopPropagation();
+					evt.preventDefault();
+
+					dropbox.addEventListener("dragexit", onDragEvent, false);
+					dropbox.addEventListener("dragover", onDragEvent, false);
+					dropbox.addEventListener("drop", onDrop, false);
+				}
+		}
+
+		function onDrop(evt)
+		{
+			dropbox.removeEventListener("dragexit", onDragEvent, false);
+			dropbox.removeEventListener("dragover", onDragEvent, false);
+			dropbox.removeEventListener("drop", onDrop, false);
+			//load file in memory
+			onFileDrop(evt);
+		}
+	}
+
+	function onSceneReady(node)
+	{
+		if(gltf_node)
+				scene.root.removeChild(gltf_node);
+		gltf_node = node;
+		scene.root.addChild(gltf_node);
+		console.log(node);
+		window.root = node;
+		if(node.animations)
+		{
+			anim_index = anim_index % node.animations.length;
+			animation = node.animations[anim_index];
+		}
+	}
+
+	function onFileDrop(evt)
+	{
+		evt.stopPropagation();
+		evt.preventDefault();
+
+		var files = evt.dataTransfer.files;
+		var count = files.length;
+		RD.GLTF.loadFromFiles(files, onSceneReady);
+	}
+
+	</script>
+</head>
+<body>
+<script>init();</script>
+</body>
+</html>
+
+

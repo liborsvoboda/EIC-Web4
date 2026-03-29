@@ -1,2 +1,0 @@
-query: Security/CWE-347/MissingJwtSignatureCheck.ql
-postprocess: TestUtilities/PrettyPrintModels.ql

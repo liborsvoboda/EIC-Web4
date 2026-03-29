@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<title>rendeer.js: shadowmap example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix-min.js"></script>
+	<script type="text/javascript" src="../external/litegl.js"></script>
+	<script type="text/javascript" src="../src/rendeer.js"></script>
+
+	<script type="text/javascript">
+	
+	function init()
+	{
+		//create a scene
+		var scene = new RD.Scene();
+
+		//create the rendering context
+		var renderer = new RD.Renderer({width: window.innerWidth, height:window.innerHeight});
+		document.body.appendChild(renderer.canvas); //attach
+
+		//create camera
+		var camera = new RD.Camera();
+		camera.perspective( 45, gl.canvas.width / gl.canvas.height, 1, 10000 );
+		camera.lookAt( [0,200,300],[0,100,0],[0,1,0] );
+
+		//create a root node
+		var pivot = new RD.SceneNode();
+		pivot.update = function(dt) { 
+			this.rotate(dt * 0.2,RD.UP);
+		}
+		scene.root.addChild(pivot);
+
+		//create the floor
+		var floor = new RD.SceneNode();
+		floor.mesh = "planeXZ"; //this mesh comes by default
+		floor.scaling = 10000;
+		floor.createMaterial({color:[0.5,0.5,0.5]});
+		pivot.addChild(floor);
+
+		(new RD.Material()).register("gray")
+
+		var items = new RD.SceneNode({
+			mesh:"cube",
+			material:"gray"
+		});
+		items._instances = [];
+		for(let i = 0; i < 100; ++i)
+		{
+			var m = mat4.create();
+			mat4.translate(m,m,[Math.random()*5000-2500,50,Math.random()*5000-2500])
+			mat4.scale(m,m,[100,100,100]);
+			items._instances.push(m);
+		}
+		pivot.addChild(items);
+
+		var ceiling = new RD.SceneNode({ mesh: "planeXZ", position: [0,200,0], scale: 1000, material: {color:[0.5,0.5,0.5]}});
+		ceiling.rotate(180*DEG2RAD,[1,0,0]);
+		//pivot.addChild(ceiling);
+
+		//create the human
+		var man = new RD.SceneNode();
+		man.createMaterial();
+		man.mesh = "data/man.obj";
+		pivot.addChild(man);
+
+		//light with shadowmap 
+		var light = new RD.Light();
+		light.light_type = RD.SPOT_LIGHT;
+		light.cast_shadows = true;
+		light.color = [1.5,0.5,0.5];
+		light.cone_start = 25;
+		light.cone_end = 30;
+		light.max_distance = 1000;
+		light.lookAt([400,500,0],[0,50,0],[0,1,0]);
+		scene.root.addChild(light);
+
+		var light2 = new RD.Light();
+		light2.light_type = RD.DIRECTIONAL_LIGHT;
+		light2.color = [0.5,0.3,0.1];
+		light2.area = 1000;
+		light2.cast_shadows = true;
+		light2.max_distance = 5000;
+		light2.lookAt([-500,1500,200],[0,0,0],[0,1,0]);
+		scene.root.addChild(light2);
+
+		var light3 = new RD.Light();
+		light3.light_type = RD.POINT_LIGHT;
+		light3.color = [1,1,0];
+		light3.intensity = 1;
+		light3.max_distance = 500;
+		light3.cast_shadows = false;
+		light3.position = [50,20,0];
+		scene.root.addChild(light3);
+
+		var sphere = new RD.SceneNode({mesh:"sphere",flags:{ cast_shadows: false }, material:{emissive:light3.color}});
+		light3.addChild(sphere);
+
+		//global settings
+		var bg_color = vec4.fromValues(0.0,0.0,0.0,1);
+		renderer.ambient_light = [0.1,0.1,0.1];
+		renderer.light_color = [0,0,0];
+
+		var viewdepth_shader = new GL.Shader.createFX(`
+				float z_n = 2.0 * color.x - 1.0;
+    			float f = 2.0 * u_zNear * u_zFar / (u_zFar + u_zNear - z_n * (u_zFar - u_zNear));
+				color = vec4(f / u_zFar);
+		`,`uniform float u_zNear; uniform float u_zFar;`);
+
+		//main render loop
+		var last = now = getTime();
+		requestAnimationFrame(animate);
+		function animate() {
+			requestAnimationFrame( animate );
+
+			last = now;
+			now = getTime();
+			var dt = (now - last) * 0.001;
+
+			gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+
+			light3.position = [0,Math.sin(now*0.001) * 30 + 100, 50];
+
+			//render final pass
+			renderer.clear(bg_color);
+			renderer.render(scene, camera);
+
+			//update
+			scene.update(dt);
+
+			gl.disable( gl.DEPTH_TEST );
+			gl.disable( gl.BLEND );
+			if(renderer.shadows_info?.texture)
+			{
+				gl.viewport(0,0,400,400);
+				renderer.shadows_info.texture.setParameter( gl.TEXTURE_MAG_FILTER, gl.NEAREST );
+				renderer.shadows_info.texture.toViewport(viewdepth_shader,{u_zNear: 0.01, u_zFar: light.max_distance});
+			}
+		}
+
+		//input
+		renderer.context.captureMouse(true);
+		renderer.context.onmousemove = function(e)
+		{
+			if(e.dragging)
+			{
+				camera.orbit( e.deltax * 0.01, RD.UP );
+				camera.orbit( e.deltay * 0.01, RD.RIGHT, null, true );
+			}
+		}
+		renderer.context.onmousewheel = function(e)
+		{
+			camera.orbitDistanceFactor( 1 + (100 / e.deltaY) * 0.1 )
+		}
+	}
+
+
+	</script>
+</head>
+<body>
+<script>init();</script>
+</body>
+</html>
+
+
